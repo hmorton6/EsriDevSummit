@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="author" content="Hamish Morton">
+  <meta name="description" content="Demo for 2019 Esri European Developer Summit">
+  <title>Using Arcade in the JavaScript API</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.12/esri/css/main.css">
+
+  <script src="https://js.arcgis.com/4.12/"></script>
+  
+
+  <script type="text/plain" id="styleInfo">
+    /*Arcade script that calculates carbon content, if the value is zero then there are missing
+    attributes in the calculation. This information in used to symbolise the data. Carbon calculation
+    used here can be found at - https://www.field-studies-council.org/media/4811244/trees-and-carbon-15-06.pdf*/
+
+    //Assign tree circumference (in cm) to a variable (in m)
+    var treesCircumference = $feature.Stammumfg/100;
+    
+    //Assign tree height (in m) to a variable
+    var treesHeight = $feature.BaumHoehe;
+    
+    //Calculate tree radius (in m) and assign to a variable. Radius = Circumference/2PI
+    var treesRadius = treesCircumference / (2 * PI);
+    
+    //Calculate tree volume (in m^3) and assign to a variable. Volume = PI * Radius^2 * Height
+    var treesVolume = (PI * Pow(treesRadius, 2)) * treesHeight;
+    
+    /*Calculate tree mass (in kg) and assign to a variable (use constant of 615 as this is the wood 
+    density of Sycamore Maple - https://www.wood-database.com/sycamore-maple/). Mass = Volume * Density */
+    var treesMass = treesVolume * 615;
+    
+    /*Calculate the carbon stored in the tree in kg (50% of mass is biomass and 50% is water).
+    50% of the biomass is carbon*/
+    var carbon = treesMass * 0.5 * 0.5;
+    
+    //Return 'Missing Data' if value is 0
+    IIf(carbon == 0, 'Missing Data', 'Complete Data');
+  </script>
+
+
+
+  <script type="text/plain" id="carbonInfo">
+    //Calculate the carbon content of trees all in one line (heavily simplified version of multi-line above)
+    var carbon = Pow(($feature.Stammumfg/200/PI), 2) * $feature.BaumHoehe * 153.75 * PI;
+
+    //Concatenate the text for the popup into a meaningful sentence
+    var ifFalse = Concatenate(['This tree contains ', Text(carbon, '#,###'), 'kg of carbon.'], '');
+
+    //Return the value of carbon in kg, or 'Missing Value' is there is data missing
+    IIf(carbon == 0, 'Missing Data', ifFalse);
+  </script>
+
+
+
+  <script>
+    //Require statement containing relevant modules 
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/renderers/UniqueValueRenderer",
+      "esri/widgets/Legend"
+    ], function(Map, MapView, FeatureLayer, UniqueValueRenderer, Legend) {
+      
+    //Set basemap as topo-vector
+      var map = new Map({
+        basemap: "topo-vector"
+      });
+    
+    //Create a MapView and set default zoom to Berlin
+      var view = new MapView({
+        container: "viewDiv",  
+        map: map,
+        center: [13.404954, 52.520008],
+        zoom: 12            
+      });
+
+    //Grab carbon info by tag to be used for popup content  
+      var carbonInfo = document.getElementById("carbonInfo").text;
+    //Create popup
+      var popupTrees = {
+        title: "Carbon Storage Information",
+        expressionInfos: [{
+          name: "carbon-calculation",
+          title: "Tree Carbon Storage",
+          expression: carbonInfo
+        }],
+        content: "{expression/carbon-calculation}"
+      }
+
+    //Grab missing data info by tag to be used for symbolisation/legend
+      var missingField = document.getElementById("styleInfo").text;
+    //Symbolise layer based upon missing data
+      var renderer = new UniqueValueRenderer({
+        valueExpression: missingField,
+        valueExpressionTitle: "Data Completeness",
+        uniqueValueInfos: [{
+          value: "Complete Data",
+          symbol: {
+            type:"simple-marker",
+            size: 5,
+            color: "green",
+            outline: {
+              width: 0
+            }
+          }
+        }, {
+          value: "Missing Data",
+          symbol: {
+            type:"simple-marker",
+            size: 5,
+            color: "red",
+            outline: {
+              width: 0
+            }
+        }
+        }]
+      });
+
+
+    //Create layer utilising previously created symbolisation and popup
+    //Only bring through Sycamore Maple to the map
+      var treesBerlin = new FeatureLayer({
+        url: "https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Baumkataster_Berlin/FeatureServer",
+        outFields: ["*"],
+        definitionExpression: "Art_Bot = 'ACER PSEUDOPLATANUS'",
+        renderer: renderer,
+        popupTemplate: popupTrees
+      });
+
+    //Add tree layer to the map
+      map.add(treesBerlin);
+
+      var legend = new Legend({
+            view: view,
+            layerInfos: [
+              {
+                layer: treesBerlin,
+                title: "Legend"
+              }
+            ]
+          });
+    
+    //Add legend to the map
+      view.ui.add(legend, "bottom-right");
+    });
+
+  </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html> 
