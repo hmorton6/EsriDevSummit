@@ -1,0 +1,154 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <!--
+  ArcGIS API for JavaScript, https://js.arcgis.com
+  For more information about the webmap-basic sample, read the original sample description at developers.arcgis.com.
+  https://developers.arcgis.com/javascript/latest/sample-code/webmap-basic/index.html
+  -->
+<title>Load a basic WebMap - 4.13</title>
+
+<!--      Used for demonstation at the European Developer Summit - Berlin 2019-->
+<!--      Guenter Grimm-->
+<!--
+      /************************************************************
+      * Use the four steps below to explore and update
+      * the labeling Arcade expression of a webmap
+      *
+      * Uncomment each block of code in the steps and use
+      * the console to examine the messages and information.
+      ************************************************************/
+  -->
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+
+    <script src="https://js.arcgis.com/4.13/"></script>
+    
+    <script>
+      require(["esri/views/MapView", "esri/WebMap"], function(MapView, WebMap) {
+        /************************************************************
+         * Creates a new WebMap instance. A WebMap must reference
+         * a PortalItem ID that represents a WebMap saved to
+         * arcgis.com or an on-premise portal.
+         *
+         * To load a WebMap from an on-premise portal, set the portal
+         * url with esriConfig.portalUrl.
+         ************************************************************/
+        var webmap = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem()
+            id: "f2e9b762544945f390ca4ac3671cfa72"  //original from the sample
+            // id: "<Paste-in-your-own-PortalItem_ID>"    //webmap for demo
+
+              /************************************************************
+               * The WebMap for this demo is using the following  feature layer
+               * https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NOAA_METAR_current_wind_speed_direction_v1/FeatureServer
+               * from the Living Atlas.
+               *
+               * Temperature in this layer is in Farenheit and has been converted
+               * to Celcius using an Arcade expression on the labels in the webmap
+               ************************************************************/
+          }
+        });
+
+
+//Step 3
+        /************************************************************
+         * 
+         * Adds a new labelingInfo array with a temperature 
+         * unit conversion expression
+         * 
+         ************************************************************/
+
+     //  webmap.when(function(){
+     //  var myExpression = webmap.layers.items[1].labelingInfo[0].labelExpressionInfo.expression;
+     //  var myNewExpression = 'iif($feature.TEMP > 40, floor(' + myExpression +  ',2), "It is freezing\")';
+     //  var myLabelingInfo = [{labelExpressionInfo:{expression: myNewExpression}}];
+     //
+     //      webmap.layers.items[1].labelingInfo = myLabelingInfo;
+     //
+     // },function(){console.error("Error")});
+
+//Step 4
+        /************************************************************
+         * 
+         * Adds multiple label classes 
+         * 
+         ************************************************************/
+//   webmap.when(function(){
+//    var myLayer = webmap.layers.items[1];
+
+//         const nameArcade = "$feature.Station_Name";
+//         const nameClass = {
+//           labelPlacement: "above-right",
+//           labelExpressionInfo: {
+//             expression: nameArcade
+//           }
+//         };
+
+//         const tempArcade = "round(($feature.TEMP -32)* (5/9)) + ' °C'";
+//         const tempClass = {
+//           labelExpressionInfo: {
+//             expression: tempArcade
+//           },
+//           labelPlacement: "below-left"
+//         };
+
+//      myLayer.labelingInfo = [tempClass, nameClass];
+
+//         },function(){console.error("Error")});
+
+
+        /************************************************************
+         * Set the WebMap instance to the map property in a MapView.
+         ************************************************************/
+        var view = new MapView({
+          map: webmap,
+          container: "viewDiv"
+        });
+
+// Step 1
+        /************************************************************
+         * Display the expression from the webmap.
+         ************************************************************/
+
+        // view.when(function(){
+        //   console.log(webmap.layers.items[1].labelingInfo[0].labelExpressionInfo.expression);
+        // }, function(){console.error("Error")});
+
+
+// Step 2
+        /************************************************************
+         * Display the attributes for the stations layer in the webmap.
+         ************************************************************/
+
+        //   view.when(function(){
+        //   console.log(webmap.layers.items[1]);
+        // }, function(){console.error("Error")});
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
